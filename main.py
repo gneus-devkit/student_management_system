@@ -1,6 +1,7 @@
 from menu import create_student, add_grade, attendance
 from student_report import view_student
 from classroom import Classroom
+from sort import sort_students_by_name, sort_students_by_grade, sort_students_by_attendance
 import json
 import os
 
@@ -20,7 +21,7 @@ def save_classes(classroom_dict):
 def main_menu():
     classroom_dict = load_classes()
     
-    response = input("\nWelcome to the Student Management System:\n\n(1) Classrooms\n(2) Classroom List\n(3)Remove Class\n(0) Exit\n\n").lower().strip() 
+    response = input("\nWelcome to the Student Management System:\n\n(1) Classrooms\n(2) Classroom List\n(3) Remove Class\n(0) Exit\n\n").lower().strip() 
     if response in ["1", "classrooms", "classroom"]:
         classroom_name = input("\nEnter the classroom name:\n\n").lower().strip()
         
@@ -75,9 +76,18 @@ def secondary_router(classroom_name, classroom):
     elif response in ["2", "existing", "exist"]:
         existing_student(classroom_name, classroom)
     elif response in ["3", "classlist", "class"]:
-        for student in classroom.class_list:
-            print(f"Name: {student.name}, Age: {student.age}, Overall Grade: {student.overall_grade}, Overall Attendance: {student.overall_attendance}")
-        secondary_router(classroom_name, classroom)
+        decision = input("\nHow would you like to sort the classlist:\n\n(1) Name\n(2) Grade\n(3) Attendance\n(0) Exit\n\n").lower().strip()
+        if decision in ["1", "name"]:
+            sort_students_by_name(classroom)
+        elif decision in ["2", "grade"]:
+            sort_students_by_grade(classroom)
+        elif decision in ["3", "attendance"]:
+            sort_students_by_attendance(classroom)
+        elif decision in ["0", "exit"]:
+            main_menu()
+        else:
+            print("Invalid option. Returning to the previous menu.")
+        return secondary_router(classroom_name, classroom)
         
     elif response in ["4", "clear class", "clear"]:
         confirm = input(f"\nAre you sure you want to clear all students from '{classroom_name}'? (Y/n):\n\n").lower().strip()
@@ -87,12 +97,12 @@ def secondary_router(classroom_name, classroom):
             classroom_dict[classroom_name] = classroom.to_dict()
             save_classes(classroom_dict)
             print(f"Classroom '{classroom_name}' has been cleared.")
-        secondary_router(classroom_name, classroom)
+        return secondary_router(classroom_name, classroom)
 
 def existing_student(classroom_name, classroom):
     student_name = input("\nEnter the student's name:\n(0) Return to main menu\n\n").lower().strip()
     if student_name == "0":
-        return secondary_router(classroom_name, classroom)
+        secondary_router(classroom_name, classroom)
     
     for student in classroom.class_list:
         if student.name.lower() == student_name:
@@ -102,7 +112,7 @@ def existing_student(classroom_name, classroom):
         print("Student not found.")
         return existing_student(classroom_name, classroom)
     
-    return student_menu(selected_student, classroom_name, classroom)
+    student_menu(selected_student, classroom_name, classroom)
     
 def student_menu(selected_student, classroom_name, classroom):
     response = input("\nWhat would you like to do:\n\n(1) Attendance\n(2) Add grade\n(3) View student\n(4) Delete student\n(0) Exit to last menu\n\n").lower().strip()
@@ -148,7 +158,7 @@ def student_menu(selected_student, classroom_name, classroom):
             return secondary_router(classroom_name, classroom)
     
     elif response in ["0", "exit", "last menu", "back", "return", "main menu", "menu"]:
-        return existing_student(classroom_name, classroom)
+        existing_student(classroom_name, classroom)
 
 
 main_menu()
